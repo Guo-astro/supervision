@@ -4346,10 +4346,34 @@ APIs described here may change or may never ship in a release, so use the <a hre
 <h3 id="unreleased-upcoming">Unreleased <small>upcoming</small><a class="headerlink" href="#unreleased-upcoming" title="Permanent link">&para;</a></h3>
 <ul>
 <li>
+<p>The depth showcase now reads video files to EOF by default even when frame-count metadata is missing or inaccurate, validates frame limits, skips unusable depth maps during colour-range calibration, selects only devices supported by installed PyTorch, and keeps inference timing memory bounded. (<a href="https://github.com/roboflow/supervision/pull/2804">#2804</a>)</p>
+</li>
+<li>
+<p><code>sv.assets.download_assets(VideoAssets.GROCERY_STORE)</code> no longer fails with <code>Downloaded asset 'grocery-store.mp4' failed MD5 verification</code>: the catalog now holds the checksum of the hosted file. (<a href="https://github.com/roboflow/supervision/pull/2804">#2804</a>)</p>
+</li>
+<li>
+<p>Annotators and <code>sv.hex_to_rgba</code> now accept 3- and 4-digit short hex colors such as <code>"#f0f"</code> and <code>"#f0f8"</code>, matching <code>sv.Color.from_hex</code>. Previously <code>sv.BoxAnnotator(color="#f0f")</code> raised <code>ValueError</code>. (<a href="https://github.com/roboflow/supervision/pull/2801">#2801</a>)</p>
+</li>
+<li>
+<p><code>sv.ImageSink(overwrite=False)</code> now raises <code>FileExistsError</code> instead of silently replacing an existing image with the same filename, including dangling symlink destinations. Paths containing embedded null characters raise <code>ValueError</code> before writing, preventing native path truncation from bypassing the overwrite guard. (<a href="https://github.com/roboflow/supervision/pull/2800">#2800</a>)</p>
+</li>
+<li>
+<p><code>sv.merge_multi_segment</code> now preserves nearest-vertex ordering for large integer origins by translating before distance calculations, and raises <code>ValueError</code> when an adjacent integer segment pair spans more than <code>2**25</code> on either axis. Adjacent pairs mixing integer and floating segments reject integer coordinates outside <code>[-2**53, 2**53]</code> before lossy float64 conversion. (<a href="https://github.com/roboflow/supervision/pull/2786">#2786</a>)</p>
+</li>
+<li>
 <p>Depth input validation now rejects unwrapped integer arrays instead of treating them as valid depth values. (<a href="https://github.com/roboflow/supervision/pull/2795">#2795</a>)</p>
 </li>
 <li>
 <p><code>sv.metrics.MeanAverageRecall.compute()</code> now preserves shared scalar metadata when filtering targets by object size, instead of raising <code>IndexError</code>. (<a href="https://github.com/roboflow/supervision/pull/2791">#2791</a>)</p>
+</li>
+<li>
+<p><code>sv.ComparisonAnnotator</code> now annotates grayscale scenes, shaped <code>(H, W)</code> or <code>(H, W, 1)</code> or given as a Pillow <code>"L"</code> image, instead of raising <code>ValueError</code>. Each region is blended with the first (blue) channel of its color, the value OpenCV draws on a single-channel image, so a grayscale result equals the first channel of the same annotation on a BGR copy. (<a href="https://github.com/roboflow/supervision/pull/2803">#2803</a>)</p>
+</li>
+<li>
+<p>The NumPy fallback for <code>line</code>, <code>polylines</code> and <code>drawContours</code> at <code>thickness</code> 1, and for <code>circle</code> outlines of <code>thickness</code> 1 and filled circles, now matches OpenCV pixel for pixel. These paths still used Pillow: on 2,000 random shapes, 66% of thin lines, 80% of thin circles and 82% of filled circles differed from <code>cv2</code>, and a filled radius-10 circle painted 349 pixels instead of 317. Thin segments now follow OpenCV's <code>clipLine</code> and <code>LineIterator</code>, and circles port the midpoint stepping of OpenCV's <code>Circle</code>. A negative circle radius now raises <code>ValueError</code>, as in OpenCV. (<a href="https://github.com/roboflow/supervision/pull/2808">#2808</a>)</p>
+</li>
+<li>
+<p>The NumPy fallback for <code>fillPoly</code> and filled <code>drawContours</code> now matches OpenCV for polygons whose edges leave the canvas, extending the in-bounds parity of <a href="https://github.com/roboflow/supervision/pull/2730">#2730</a>. OpenCV takes an off-canvas edge's slope from its integer-clipped endpoints; the fallback used the original vertices, so 61% of random polygons leaving the canvas differed by a few boundary pixels (up to 52). <code>polygon_to_mask</code>, <code>sv.draw_filled_polygon</code> and <code>PolygonZone</code> masks are affected without OpenCV. (<a href="https://github.com/roboflow/supervision/pull/2810">#2810</a>)</p>
 </li>
 </ul>
 <p>-</p>
@@ -6554,7 +6578,7 @@ APIs described here may change or may never ship in a release, so use the <a hre
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 24, 2026 22:52:07 UTC">October 24, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 26, 2026 23:32:57 UTC">October 26, 2026</span>
   </span>
 
     
@@ -6582,9 +6606,9 @@ APIs described here may change or may never ship in a release, so use the <a hre
     
     <nav>
       
-        <a href="https://github.com/aswanth-07" class="md-author" title="@aswanth-07">
+        <a href="https://github.com/Iyanuoluwa007" class="md-author" title="@Iyanuoluwa007">
           
-          <img src="https://avatars.githubusercontent.com/u/169923758?v=4&size=72" alt="aswanth-07">
+          <img src="https://avatars.githubusercontent.com/u/70354778?v=4&size=72" alt="Iyanuoluwa007">
         </a>
       
         <a href="https://github.com/web-flow" class="md-author" title="@web-flow">
@@ -6592,21 +6616,21 @@ APIs described here may change or may never ship in a release, so use the <a hre
           <img src="https://avatars.githubusercontent.com/u/19864447?v=4&size=72" alt="web-flow">
         </a>
       
-        <a href="https://github.com/reubenjrouse" class="md-author" title="@reubenjrouse">
-          
-          <img src="https://avatars.githubusercontent.com/u/95531805?v=4&size=72" alt="reubenjrouse">
-        </a>
-      
         <a href="https://github.com/Borda" class="md-author" title="@Borda">
           
           <img src="https://avatars.githubusercontent.com/u/6035284?v=4&size=72" alt="Borda">
+        </a>
+      
+        <a href="https://github.com/Sonica-B" class="md-author" title="@Sonica-B">
+          
+          <img src="https://avatars.githubusercontent.com/u/66372798?v=4&size=72" alt="Sonica-B">
         </a>
       
       
       
         
           <a href="https://github.com/roboflow/supervision/tree/main/docs/changelog.md" class="md-author md-author--more">
-            +30
+            +35
           </a>
         
       
